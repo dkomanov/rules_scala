@@ -183,7 +183,12 @@ CurrentTarget: {current_target}
     compiler_classpath = separator.join([j.path for j in compiler_classpath_jars])
 
     toolchain = ctx.toolchains['@io_bazel_rules_scala//scala:toolchain_type']
-    scalacopts = toolchain.scalacopts + ctx.attr.scalacopts
+        # always append -YdisableFlatCpCaching, workaround for
+        # https://github.com/bazelbuild/rules_scala/issues/305
+        # ~remove once we upgrade to Scala 2.12.4~
+        # ^^ turns out that 2.12.4 didn't fix the issue, see:
+        # https://github.com/bazelbuild/rules_scala/pull/310#issuecomment-337466097
+    scalacopts = toolchain.scalacopts + ctx.attr.scalacopts + ["-YdisableFlatCpCaching"]
 
     scalac_args = """
 Classpath: {cp}
