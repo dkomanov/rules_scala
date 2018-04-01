@@ -146,7 +146,14 @@ object BenchmarkGenerator {
         val source: GeneratorSource = generatorType match {
           case AsmGenerator =>
             val generatorSource = new ASMGeneratorSource
-            generatorSource.processClasses(collectClassesFromJar(benchmarkJarPath).map(_.toFile).asJavaCollection)
+            try {
+              generatorSource.processClasses(collectClassesFromJar(benchmarkJarPath).map(_.toFile).asJavaCollection)
+            } catch {
+              case _: IndexOutOfBoundsException =>
+                // this would fail due to https://github.com/bazelbuild/rules_scala/issues/295
+                // let's throw a useful message instead
+                sys.error("jmh in rules_scala with generator_type=asm doesn't work with Java 8 bytecode, use generator_type=reflection. See more information: https://github.com/bazelbuild/rules_scala/issues/295")
+            }
             generatorSource
 
           case ReflectionGenerator =>
